@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+// Patema: Protocol buffer definition for the car rental service
+
 service CarRental {
 	rpc AddCar (Car) returns (Response);
 	rpc UpdateCar (Car) returns (Response);
