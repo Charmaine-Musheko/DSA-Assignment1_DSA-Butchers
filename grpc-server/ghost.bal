@@ -1,10 +1,11 @@
 import ballerina/grpc;
 
 // In-memory table to store cars
-table<Car> key(id) cars = table [];
+table<Car> cars = table [];
 
 // Main gRPC service
-service "/CarRental" on new grpc:Listener(9090) {
+@grpc:ServiceDescriptor { descriptor: PATEMA_DESC }
+service "CarRental" on new grpc:Listener(9090) {
 
         // Ghost: add a new car to the table
         remote function AddCar(Car car) returns Response|error {

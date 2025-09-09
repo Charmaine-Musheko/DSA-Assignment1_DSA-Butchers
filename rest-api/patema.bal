@@ -2,7 +2,7 @@ import ballerina/http;
 
 // Basic record representing an asset in the system
 public type Asset record {
-    string id;
+    readonly string id;
     string name;
     string faculty;
     // Additional fields such as components and maintenance schedules can be

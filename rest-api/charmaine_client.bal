@@ -1,4 +1,5 @@
 import ballerina/http;
+import ballerina/io;
 
 // Charmaine's client: demonstrates interactions with the REST service
 public function main() returns error? {
@@ -7,14 +8,14 @@ public function main() returns error? {
         // TODO: Extend client to read user input or test additional endpoints
 
         // Add asset
-        var resp = check assetClient->post("/assets/addAsset", { name: "Laptop", faculty: "Science" });
+        json resp = check assetClient->post("/assets/addAsset", { name: "Laptop", faculty: "Science" });
         io:println(resp);
 
         // List assets
-        var assets = check assetClient->get("/assets/listAssets");
+        json assets = check assetClient->get("/assets/listAssets");
         io:println(assets);
 
         // Check overdue assets
-        var overdue = check assetClient->get("/assets/overdue");
+        json overdue = check assetClient->get("/assets/overdue");
         io:println(overdue);
 }

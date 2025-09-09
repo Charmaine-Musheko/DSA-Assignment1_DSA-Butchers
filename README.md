@@ -27,3 +27,22 @@ This project contains two main parts:
 ## Setup
 - Requires [Ballerina](https://ballerina.io/) installed
 - See each folder for specific instructions
+
+## Running the Services
+1. **RESTful Asset Management API**
+   ```bash
+   cd rest-api
+   bal run
+   ```
+
+2. **gRPC Car Rental Server**
+   ```bash
+   cd grpc-server
+   bal run
+   ```
+
+3. **Sample gRPC Client**
+   ```bash
+   cd grpc-client
+   bal run
+   ```
