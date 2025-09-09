@@ -4,24 +4,31 @@ import ballerina/grpc;
 table<Car> key(id) cars = table [];
 
 // Main gRPC service
-service "/CarRental" on new grpc:Listener(9090) {
+@grpc:ServiceDescriptor { descriptor: PATEMA_DESC }
+service "CarRental" on new grpc:Listener(9090) {
 
         // Ghost: add a new car to the table
         remote function AddCar(Car car) returns Response|error {
-                // TODO: Ghost to implement add car logic
+                check cars.add(car);
                 return { message: "Car added" };
         }
 
         // Ghost: update an existing car entry
         remote function UpdateCar(Car car) returns Response|error {
-                // TODO: Ghost to implement update car logic
-                return { message: "Car updated" };
+                if cars.hasKey(car.id) {
+                        check cars.put(car);
+                        return { message: "Car updated" };
+                }
+                return { message: "Car not found" };
         }
 
         // Ghost: remove a car from the table
         remote function RemoveCar(CarId id) returns Response|error {
-                // TODO: Ghost to implement remove car logic
-                return { message: "Car removed" };
+                if cars.hasKey(id.id) {
+                        _ = cars.remove(id.id);
+                        return { message: "Car removed" };
+                }
+                return { message: "Car not found" };
         }
 
         // Ngozu: list all currently available cars
