@@ -31,7 +31,7 @@
 	Install any missing dependencies.
 	Run diagnostics and resolve any issues.
 	Check for markdown files in project folder for relevant instructions on how to do this.
-	-->
+	--> hi
 
 - [ ] Create and Run Task
 	<!--
