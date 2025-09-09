@@ -383,7 +383,7 @@ public type ReservationResponse record {|
 
 @protobuf:Descriptor {value: PATEMA_DESC}
 public type Car record {|
-    string id = "";
+    readonly string id = "";
     string make = "";
     string model = "";
     float price = 0.0;

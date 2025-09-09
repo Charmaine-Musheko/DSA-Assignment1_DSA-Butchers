@@ -2,18 +2,37 @@
 
 import ballerina/http;
 import ballerina/io;
+import ballerina/time;
+
+type ComponentReq record {string id; string component;};
+type ScheduleReq record {string id; string description; string due;};
 
 // Add or remove components for a given asset
 public function addComponent(http:Request req) returns json {
-    // TODO: Treasure to extract component info and update asset
     io:println("Adding component");
-    return { message: "Component added" };
+    json payload = checkpanic req.getJsonPayload();
+    ComponentReq data = checkpanic payload.cloneWithType(ComponentReq);
+    if assets.hasKey(data.id) {
+        Asset asset = checkpanic assets.get(data.id);
+        asset.components.push(data.component);
+        _ = assets.put(asset);
+        return { message: "Component added" };
+    }
+    return { message: "Asset not found" };
 }
 
 // Add or remove schedules for a given asset
 public function addSchedule(http:Request req) returns json {
-    // TODO: Treasure to extract schedule info and update asset
     io:println("Adding schedule");
-    return { message: "Schedule added" };
+    json payload = checkpanic req.getJsonPayload();
+    ScheduleReq data = checkpanic payload.cloneWithType(ScheduleReq);
+    time:Utc due = checkpanic time:utcFromString(data.due);
+    if assets.hasKey(data.id) {
+        Asset asset = checkpanic assets.get(data.id);
+        asset.schedules.push({ description: data.description, due: due });
+        _ = assets.put(asset);
+        return { message: "Schedule added" };
+    }
+    return { message: "Asset not found" };
 }
 
