@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "ballerina",
+            "request": "launch",
+            "name": "Run REST API",
+            "script": "${workspaceFolder}/rest-api/patema.bal"
+        },
+        {
+            "type": "ballerina",
+            "request": "launch",
+            "name": "Run gRPC Server",
+            "script": "${workspaceFolder}/grpc-server/ghost.bal"
+        },
+        {
+            "type": "ballerina",
+            "request": "launch",
+            "name": "Run gRPC Client",
+            "script": "${workspaceFolder}/grpc-client/charmaine_client.bal"
+        }
+    ]
+}
