@@ -28,3 +28,17 @@ This project contains two main parts:
 ## Setup
 - Requires [Ballerina](https://ballerina.io/) installed
 - See each folder for specific instructions
+
+# Resources
+
+1. [ballerina-getting-started](https://ballerina.io/learn/get-started/) : Essential to properly run and or setup the project
+
+2. [structuring-your-code](https://ballerina.io/learn/organize-ballerina-code/)
+
+3. [sending-requests](https://ballerina.io/learn/by-example/http-client-send-request-receive-response/) : Useful for passing data through a `POST` request
+
+4. [basic-RESTApi-setup](https://ballerina.io/learn/by-example/http-basic-rest-service/) : useful for understanding http and RESTApi setup
+
+5. [basic-grpc-setup](https://ballerina.io/learn/by-example/grpc-service-simple/) : Useful to understand the code for the grpc code
+
+
