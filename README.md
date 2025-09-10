@@ -17,6 +17,7 @@ This project contains two main parts:
 - Ngozu: Overdue check (REST), list/search/add to cart (gRPC)
 - Treasure: Components/schedules (REST), reservation/price/validation (gRPC)
 - Charmaine: Client (REST & gRPC)
+- Ndhlovu: (REST & gRPC)
 
 ## Workflow
 - Each member works on their branch
