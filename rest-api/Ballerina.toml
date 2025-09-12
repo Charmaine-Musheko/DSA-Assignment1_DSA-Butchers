@@ -1,7 +1,5 @@
 [package]
-org = "charmaine"
-name = "rest_api"
-version = "0.1.0"
-
-[build-options]
-observabilityIncluded = true
+org = "NUST"
+name = "asset_management_api"
+version = "1.0.0"
+distribution = "2201.12.7"
