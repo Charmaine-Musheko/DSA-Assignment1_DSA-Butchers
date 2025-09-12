@@ -4,6 +4,7 @@ This package contains the starter files for **Question 1** of the assignment.
 Each member has a dedicated module:
 
 - `patema.bal` – service definition and database setup
+- 'db.bal contains database setup, asset_service.bal contains asset add/get, Ballerina.toml & main.bal were neccessary to test, ' 
 - `ghost.bal` – list and filter assets
 - `ngozu.bal` – overdue asset checks
 - `treasure.bal` – component and schedule management
