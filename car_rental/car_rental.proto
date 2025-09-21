@@ -1,0 +1,215 @@
+syntax = "proto3";
+package car_rental;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "car_rentalpb"; // optional, adjust for your toolchain
+
+// --- enums for consistency ---
+enum Role {
+    ROLE_UNSPECIFIED = 0;
+    ROLE_CUSTOMER = 1;
+    ROLE_ADMIN = 2;
+}
+
+enum CarStatus {
+    STATUS_UNSPECIFIED = 0;
+    AVAILABLE = 1;
+    UNAVAILABLE = 2;
+}
+
+// --- main entities ---
+message Car {
+    string plate = 1; // unique key
+    string make = 2;
+    string model = 3;
+    int32 year = 4;
+    double daily_rate = 5;
+    int32 mileage = 6;
+    CarStatus status = 7;
+    string colour = 8;
+}
+
+// user entity
+message User {
+    string username = 1;
+    Role role = 2;
+    string email = 3;
+    string full_name = 4;
+}
+
+// cart item
+message CartItem {
+    string plate = 1;
+    google.protobuf.Timestamp start_date = 2;
+    google.protobuf.Timestamp end_date = 3;
+    double estimated_price = 4;
+}
+
+// reservation entity
+message Reservation {
+    string reservation_id = 1;
+    string username = 2;
+    string plate = 3;
+    google.protobuf.Timestamp start_date = 4;
+    google.protobuf.Timestamp end_date = 5;
+    double total_price = 6;
+    google.protobuf.Timestamp created_at = 7;
+}
+
+// --- generic status reply ---
+message StatusReply {
+    bool ok = 1;
+    int32 code = 2;
+    string message = 3;
+}
+
+// --- Requests / Replies ---
+message AddCarRequest {
+    Car car = 1;
+    string request_by = 2; // admin username
+}
+
+message AddCarReply {
+    bool ok = 1;
+    string plate = 2;
+    Car car = 3;
+    string message = 4;
+}
+
+message CreateUserRequest {
+    User user = 1;
+}
+
+message CreateUsersReply {
+    int32 created_count = 1;
+    repeated string failed_usernames = 2;
+}
+
+message UpdateCarRequest {
+    string plate = 1;
+    Car updated = 2;
+}
+
+message UpdateCarReply {
+    Car car = 1;
+    StatusReply status = 2;
+}
+
+message RemoveCarRequest {
+    string plate = 1;
+}
+
+message RemoveCarReply {
+    StatusReply status = 1;
+    repeated Car cars = 2;
+}
+
+message ListAvailableCarsRequest {
+    string text_filter = 1;
+    int32 year = 2;
+    int32 year_from = 3;
+    int32 year_to = 4;
+}
+
+// --- updated search (make, model, colour) ---
+message SearchCarRequest {
+    string plate = 1;   // optional
+    string make = 2;    // optional
+    string model = 3;   // optional
+    string colour = 4;  // optional
+}
+
+message SearchCarReply {
+    repeated Car cars = 1; // may return many results
+    string message = 2;
+}
+
+// --- cart operations ---
+message AddToCartRequest {
+    string username = 1;
+    string plate = 2;
+    google.protobuf.Timestamp start_date = 3;
+    google.protobuf.Timestamp end_date = 4;
+}
+
+message AddToCartReply {
+    StatusReply status = 1;
+    CartItem item = 2;
+}
+
+message GetCartRequest {
+    string username = 1;
+}
+
+message GetCartReply {
+    repeated CartItem items = 1;
+    double estimated_total = 2;
+    StatusReply status = 3;
+}
+
+message RemoveFromCartRequest {
+    string username = 1;
+    string plate = 2;
+}
+
+message RemoveFromCartReply {
+    StatusReply status = 1;
+    repeated CartItem items = 2;
+}
+
+message ClearCartRequest {
+    string username = 1;
+}
+
+message ClearCartReply {
+    StatusReply status = 1;
+}
+
+// --- reservations ---
+message PlaceReservationRequest {
+    string username = 1;
+}
+
+message PlaceReservationReply {
+    repeated Reservation reservations = 1;
+    StatusReply status = 2;
+}
+
+message ListReservationsRequest {
+    string username = 1; // optional filter
+    google.protobuf.Timestamp from = 2;
+    google.protobuf.Timestamp to = 3;
+}
+
+message ListReservationsReply {
+    Reservation reservation = 1;
+}
+
+// --- Service definition ---
+service CarRental {
+    // Admin
+    rpc AddCar (AddCarRequest) returns (AddCarReply);
+
+    rpc CreateUsers (stream CreateUserRequest) returns (CreateUsersReply);
+
+    rpc UpdateCar (UpdateCarRequest) returns (UpdateCarReply);
+    rpc RemoveCar (RemoveCarRequest) returns (RemoveCarReply);
+
+    // Customers
+    rpc ListAvailableCars (ListAvailableCarsRequest) returns (stream Car);
+
+    rpc SearchCar (SearchCarRequest) returns (SearchCarReply);
+
+    // Cart operations
+    rpc AddToCart (AddToCartRequest) returns (AddToCartReply);
+    rpc GetCart (GetCartRequest) returns (GetCartReply);
+    rpc RemoveFromCart (RemoveFromCartRequest) returns (RemoveFromCartReply);
+    rpc ClearCart (ClearCartRequest) returns (ClearCartReply);
+
+    // Reservations
+    rpc PlaceReservation (PlaceReservationRequest) returns (PlaceReservationReply);
+
+    // Admin
+    rpc ListReservations (ListReservationsRequest) returns (stream ListReservationsReply);
+}
