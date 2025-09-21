@@ -1,4 +1,10 @@
-# Asset Management
+# RESTAPI ASSET MANAGEMENT
+
+## Authors
+
+- Tinomudaishe Ndhlovu (218122187)
+- 
+- 
 
 ## RESTAPI Service Running
 
@@ -155,22 +161,22 @@ curl -X POST http://localhost:9090/components -H "Content-Type: application/json
 
 4. **UPDATE** an existing component 
 ```shell
-curl -X POST http://localhost:9090/components \
+curl -X PUT http://localhost:9090/components/COMP001 \
   -H "Content-Type: application/json" \
   -d '{
     "id": "COMP001",
-    "name": "Battery",
-    "description": "Laptop battery 5000mAh",
-    "model": "LB-5000",
+    "name": "Updated Battery",
+    "description": "Laptop battery 6000mAh",
+    "model": "LB-6000",
     "serialNumber": "BAT123456789",
-    "status": "ACTIVE"
+    "status": "UNDER_MAINTENANCE"
   }'
 ```
-<!-- 
+
 5. **DELETE** an existing asset 
 ```shell
-curl -X POST http://localhost:9090/assets -H "Content-Type: application/json" -d '{"tag": "A004","name": "3D Printer","faculty": "Engineering","department": "Mechanical","dateAcquired": "2023-05-10","currentStatus": ["ACTIVE"],"components": ["nozzle", "bed", "filament"],"maintenanceSchedule": ["QUARTERLY"],"workOrder": ["PENDING"],"tasks": ["MEDIUM"]}'
-``` -->
+curl -X DELETE http://localhost:9090/components/COMP001
+```
 
 
 
@@ -202,24 +208,24 @@ curl -X POST http://localhost:9090/maintenanceSchedules \
   }'
 ```
 
-4. **UPDATE** an existing component 
+4. **UPDATE** an existing mainantance schedule 
 ```shell
-curl -X POST http://localhost:9090/components \
+curl -X PUT http://localhost:9090/maintenanceSchedules/MS001 \
   -H "Content-Type: application/json" \
   -d '{
-    "id": "COMP001",
-    "name": "Battery",
-    "description": "Laptop battery 5000mAh",
-    "model": "LB-5000",
-    "serialNumber": "BAT123456789",
-    "status": "ACTIVE"
+    "scheduleId": "MS001",
+    "types": "ANNUAL",
+    "frequency": "Every year",
+    "requiredTasks": ["Full inspection", "Component replacement", "Software update"],
+    "lastPerformed": "2023-12-15",
+    "nextDue": "2024-12-15"
   }'
 ```
-<!-- 
-5. **DELETE** an existing asset 
+
+5. **DELETE** an existing mainantance 
 ```shell
-curl -X POST http://localhost:9090/assets -H "Content-Type: application/json" -d '{"tag": "A004","name": "3D Printer","faculty": "Engineering","department": "Mechanical","dateAcquired": "2023-05-10","currentStatus": ["ACTIVE"],"components": ["nozzle", "bed", "filament"],"maintenanceSchedule": ["QUARTERLY"],"workOrder": ["PENDING"],"tasks": ["MEDIUM"]}'
-``` -->
+curl -X DELETE http://localhost:9090/maintenanceSchedules/MS001
+```
 
 
 
@@ -256,72 +262,72 @@ curl -X POST http://localhost:9090/workOrders \
 
 4. **UPDATE** an existing component 
 ```shell
-curl -X POST http://localhost:9090/components \
+curl -X PUT http://localhost:9090/workOrders/WO001 \
   -H "Content-Type: application/json" \
   -d '{
-    "id": "COMP001",
-    "name": "Battery",
-    "description": "Laptop battery 5000mAh",
-    "model": "LB-5000",
-    "serialNumber": "BAT123456789",
-    "status": "ACTIVE"
+    "workOrderId": "WO001",
+    "status": "IN_PROGRESS",
+    "priority": "HIGH",
+    "assignedTo": "Jane Smith",
+    "tasks": ["TASK001", "TASK002", "TASK003"],
+    "createdDate": "2024-01-15",
+    "completedDate": ""
   }'
 ```
-<!-- 
+
 5. **DELETE** an existing asset 
 ```shell
-curl -X POST http://localhost:9090/assets -H "Content-Type: application/json" -d '{"tag": "A004","name": "3D Printer","faculty": "Engineering","department": "Mechanical","dateAcquired": "2023-05-10","currentStatus": ["ACTIVE"],"components": ["nozzle", "bed", "filament"],"maintenanceSchedule": ["QUARTERLY"],"workOrder": ["PENDING"],"tasks": ["MEDIUM"]}'
-``` -->
+curl -X DELETE http://localhost:9090/workOrders/WO001
+```
 
 
 
 ### RESTAPI Requests for the Tasks
 
 
-1. **GET** all Work Orders
+1. **GET** all Tasks
 ```shell
 curl -X GET http://localhost:9090/tasks
 ```
 
-2. **GET** a specific Work Orders
+2. **GET** a specific Tasks
 ```shell
 curl -X GET http://localhost:9090/tasks/TASK001
 ```
 Non-existing asset (should return 404).
 
-3. **POST** a new component '
+3. **POST** a new Task '
 ```shell
-curl -X POST http://localhost:9090/workOrders \
+curl -X POST http://localhost:9090/tasks \
   -H "Content-Type: application/json" \
   -d '{
-    "workOrderId": "WO001",
-    "status": "PENDING",
-    "priority": "HIGH",
-    "assignedTo": "Tino Ndhlovu",
-    "tasks": ["TASK001", "TASK002"],
-    "createdDate": "2024-01-15",
-    "completedDate": ""
+    "taskId": "TASK001",
+    "name": "Clean Device",
+    "description": "Thorough cleaning of internal components",
+    "size": "MEDIUM",
+    "estimatedHours": 2,
+    "requiredTools": ["Compressed air", "Soft brush", "Cleaning solution"]
   }'
 ```
 
-4. **UPDATE** an existing component 
+4. **UPDATE** an existing Tasks 
 ```shell
-curl -X POST http://localhost:9090/components \
+curl -X PUT http://localhost:9090/tasks/TASK001 \
   -H "Content-Type: application/json" \
   -d '{
-    "id": "COMP001",
-    "name": "Battery",
-    "description": "Laptop battery 5000mAh",
-    "model": "LB-5000",
-    "serialNumber": "BAT123456789",
-    "status": "ACTIVE"
+    "taskId": "TASK001",
+    "name": "Deep Cleaning",
+    "description": "Comprehensive cleaning and maintenance",
+    "size": "LARGE",
+    "estimatedHours": 4,
+    "requiredTools": ["Compressed air", "Soft brush", "Cleaning solution", "Screwdriver set"]
   }'
 ```
-<!-- 
-5. **DELETE** an existing asset 
+
+5. **DELETE** an existing Task 
 ```shell
-curl -X POST http://localhost:9090/assets -H "Content-Type: application/json" -d '{"tag": "A004","name": "3D Printer","faculty": "Engineering","department": "Mechanical","dateAcquired": "2023-05-10","currentStatus": ["ACTIVE"],"components": ["nozzle", "bed", "filament"],"maintenanceSchedule": ["QUARTERLY"],"workOrder": ["PENDING"],"tasks": ["MEDIUM"]}'
-``` -->
+curl -X DELETE http://localhost:9090/tasks/TASK001
+```
 
 
 

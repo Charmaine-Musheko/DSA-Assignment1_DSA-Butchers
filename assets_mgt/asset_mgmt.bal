@@ -12,7 +12,7 @@ type Component record {|
 
 type MaintenanceSchedule record {|
     readonly string scheduleId;
-    string[] types; // REGULAR, QUARTERLY, ANNUAL
+    string types; // REGULAR, QUARTERLY, ANNUAL
     string frequency;
     string[] requiredTasks;
     string lastPerformed;
@@ -153,6 +153,27 @@ service / on new http:Listener(9090) {
         }
     }
 
+    resource function put components/[string id](Component component) returns Component|http:NotFound|http:BadRequest {
+        if !components.hasKey(id) {
+            return http:NOT_FOUND;
+        }
+        if id != component.id {
+            return http:BAD_REQUEST;
+        }
+        _ = components.remove(id);
+        components.add(component);
+        return component;
+    }
+
+    resource function delete components/[string id]() returns http:Ok|http:NotFound {
+        if components.hasKey(id) {
+            _ = components.remove(id);
+            return http:OK;
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
     // === Maintenance Schedule Resources ===
     resource function post maintenanceSchedules(MaintenanceSchedule schedule) returns MaintenanceSchedule|http:Conflict {
         if maintenanceSchedules.hasKey(schedule.scheduleId) {
@@ -169,6 +190,27 @@ service / on new http:Listener(9090) {
     resource function get maintenanceSchedules/[string scheduleId]() returns MaintenanceSchedule|http:NotFound {
         if maintenanceSchedules.hasKey(scheduleId) {
             return maintenanceSchedules.get(scheduleId);
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
+    resource function put maintenanceSchedules/[string scheduleId](MaintenanceSchedule schedule) returns MaintenanceSchedule|http:NotFound|http:BadRequest {
+        if !maintenanceSchedules.hasKey(scheduleId) {
+            return http:NOT_FOUND;
+        }
+        if scheduleId != schedule.scheduleId {
+            return http:BAD_REQUEST;
+        }
+        _ = maintenanceSchedules.remove(scheduleId);
+        maintenanceSchedules.add(schedule);
+        return schedule;
+    }
+
+    resource function delete maintenanceSchedules/[string scheduleId]() returns http:Ok|http:NotFound {
+        if maintenanceSchedules.hasKey(scheduleId) {
+            _ = maintenanceSchedules.remove(scheduleId);
+            return http:OK;
         } else {
             return http:NOT_FOUND;
         }
@@ -195,6 +237,27 @@ service / on new http:Listener(9090) {
         }
     }
 
+    resource function put workOrders/[string workOrderId](WorkOrder workOrder) returns WorkOrder|http:NotFound|http:BadRequest {
+        if !workOrders.hasKey(workOrderId) {
+            return http:NOT_FOUND;
+        }
+        if workOrderId != workOrder.workOrderId {
+            return http:BAD_REQUEST;
+        }
+        _ = workOrders.remove(workOrderId);
+        workOrders.add(workOrder);
+        return workOrder;
+    }
+
+    resource function delete workOrders/[string workOrderId]() returns http:Ok|http:NotFound {
+        if workOrders.hasKey(workOrderId) {
+            _ = workOrders.remove(workOrderId);
+            return http:OK;
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
     // === Task Resources ===
     resource function post tasks(Task task) returns Task|http:Conflict {
         if tasks.hasKey(task.taskId) {
@@ -211,6 +274,27 @@ service / on new http:Listener(9090) {
     resource function get tasks/[string taskId]() returns Task|http:NotFound {
         if tasks.hasKey(taskId) {
             return tasks.get(taskId);
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
+    resource function put tasks/[string taskId](Task task) returns Task|http:NotFound|http:BadRequest {
+        if !tasks.hasKey(taskId) {
+            return http:NOT_FOUND;
+        }
+        if taskId != task.taskId {
+            return http:BAD_REQUEST;
+        }
+        _ = tasks.remove(taskId);
+        tasks.add(task);
+        return task;
+    }
+
+    resource function delete tasks/[string taskId]() returns http:Ok|http:NotFound {
+        if tasks.hasKey(taskId) {
+            _ = tasks.remove(taskId);
+            return http:OK;
         } else {
             return http:NOT_FOUND;
         }
