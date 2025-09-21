@@ -1,6 +1,22 @@
 import ballerina/http;
 
 // Common types for reuse
+type Faculty record {|
+    readonly string facultyId;
+    string name;
+    string description;
+    string dean;
+    string[] departmentIds = [];
+|};
+
+type Department record {|
+    readonly string departmentId;
+    string name;
+    string description;
+    string head;
+    string facultyId;
+|};
+
 type Component record {|
     readonly string id;
     string name;
@@ -39,17 +55,19 @@ type Task record {|
 |};
 
 // Standalone tables for management
+table<Faculty> key(facultyId) faculties = table [];
+table<Department> key(departmentId) departments = table [];
 table<Component> key(id) components = table [];
 table<MaintenanceSchedule> key(scheduleId) maintenanceSchedules = table [];
 table<WorkOrder> key(workOrderId) workOrders = table [];
 table<Task> key(taskId) tasks = table [];
 
-// Asset type now references other entities
+// Asset type now references other entities by ID
 type Asset record {|
     readonly string tag;
     string name;
-    string faculty;
-    string department;
+    string facultyId;
+    string departmentId;
     string dateAcquired;
     string currentStatus; // ACTIVE, UNDER_REPAIR, DISPOSED
     string[] componentIds = [];
@@ -58,10 +76,10 @@ type Asset record {|
 |};
 
 table<Asset> key(tag) assets = table [
-    {tag: "A001", name: "Laptop", faculty: "Engineering", 
-     department: "Computer Science", dateAcquired: "2022-01-15", currentStatus: "ACTIVE"},
-    {tag: "A002", name: "Projector", faculty: "Business", 
-     department: "Marketing", dateAcquired: "2021-09-10", currentStatus: "ACTIVE"}
+    {tag: "A001", name: "Laptop", facultyId: "F001", 
+     departmentId: "D001", dateAcquired: "2022-01-15", currentStatus: "ACTIVE"},
+    {tag: "A002", name: "Projector", facultyId: "F002", 
+     departmentId: "D002", dateAcquired: "2021-09-10", currentStatus: "ACTIVE"}
 ];
 
 // Album types (keeping your existing code)
@@ -91,9 +109,16 @@ service / on new http:Listener(9090) {
     }
 
     // === Asset Resources ===
-    resource function post assets(Asset asset) returns Asset|http:Conflict {
+    resource function post assets(Asset asset) returns Asset|http:Conflict|http:NotFound {
         if assets.hasKey(asset.tag) {
             return http:CONFLICT;
+        }
+        // Validate that faculty and department exist
+        if !faculties.hasKey(asset.facultyId) {
+            return http:NOT_FOUND;
+        }
+        if !departments.hasKey(asset.departmentId) {
+            return http:NOT_FOUND;
         }
         assets.add(asset);
         return asset;
@@ -118,6 +143,13 @@ service / on new http:Listener(9090) {
         if tag != asset.tag {
             return http:BAD_REQUEST;
         }
+        // Validate that faculty and department exist
+        if !faculties.hasKey(asset.facultyId) {
+            return http:NOT_FOUND;
+        }
+        if !departments.hasKey(asset.departmentId) {
+            return http:NOT_FOUND;
+        }
         _ = assets.remove(tag);
         assets.add(asset);
         return asset;
@@ -126,6 +158,98 @@ service / on new http:Listener(9090) {
     resource function delete assets/[string tag]() returns http:Ok|http:NotFound {
         if assets.hasKey(tag) {
             _ = assets.remove(tag);
+            return http:OK;
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
+    // === Faculty Resources ===
+    resource function post faculties(Faculty faculty) returns Faculty|http:Conflict {
+        if faculties.hasKey(faculty.facultyId) {
+            return http:CONFLICT;
+        }
+        faculties.add(faculty);
+        return faculty;
+    }
+
+    resource function get faculties() returns Faculty[] {
+        return faculties.toArray();
+    }
+
+    resource function get faculties/[string facultyId]() returns Faculty|http:NotFound {
+        if faculties.hasKey(facultyId) {
+            return faculties.get(facultyId);
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
+    resource function put faculties/[string facultyId](Faculty faculty) returns Faculty|http:NotFound|http:BadRequest {
+        if !faculties.hasKey(facultyId) {
+            return http:NOT_FOUND;
+        }
+        if facultyId != faculty.facultyId {
+            return http:BAD_REQUEST;
+        }
+        _ = faculties.remove(facultyId);
+        faculties.add(faculty);
+        return faculty;
+    }
+
+    resource function delete faculties/[string facultyId]() returns http:Ok|http:NotFound {
+        if faculties.hasKey(facultyId) {
+            _ = faculties.remove(facultyId);
+            return http:OK;
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
+    // === Department Resources ===
+    resource function post departments(Department department) returns Department|http:Conflict|http:NotFound {
+        if departments.hasKey(department.departmentId) {
+            return http:CONFLICT;
+        }
+        // Validate that faculty exists
+        if !faculties.hasKey(department.facultyId) {
+            return http:NOT_FOUND;
+        }
+        departments.add(department);
+        return department;
+    }
+
+    resource function get departments() returns Department[] {
+        return departments.toArray();
+    }
+
+    resource function get departments/[string departmentId]() returns Department|http:NotFound {
+        if departments.hasKey(departmentId) {
+            return departments.get(departmentId);
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
+    resource function put departments/[string departmentId](Department department) returns Department|http:NotFound|http:BadRequest {
+        if !departments.hasKey(departmentId) {
+            return http:NOT_FOUND;
+        }
+        if departmentId != department.departmentId {
+            return http:BAD_REQUEST;
+        }
+        // Validate that faculty exists
+        if !faculties.hasKey(department.facultyId) {
+            return http:NOT_FOUND;
+        }
+        _ = departments.remove(departmentId);
+        departments.add(department);
+        return department;
+    }
+
+    resource function delete departments/[string departmentId]() returns http:Ok|http:NotFound {
+        if departments.hasKey(departmentId) {
+            _ = departments.remove(departmentId);
             return http:OK;
         } else {
             return http:NOT_FOUND;
@@ -300,7 +424,7 @@ service / on new http:Listener(9090) {
         }
     }
 
-    // === Utility endpoints to get related entities for an asset ===
+    // === Utility endpoints to get related entities ===
     resource function get assets/[string tag]/components() returns Component[]|http:NotFound {
         if !assets.hasKey(tag) {
             return http:NOT_FOUND;
@@ -338,6 +462,70 @@ service / on new http:Listener(9090) {
         foreach string id in asset.workOrderIds {
             if workOrders.hasKey(id) {
                 result.push(workOrders.get(id));
+            }
+        }
+        return result;
+    }
+
+    resource function get assets/[string tag]/faculty() returns Faculty|http:NotFound {
+        if !assets.hasKey(tag) {
+            return http:NOT_FOUND;
+        }
+        Asset asset = assets.get(tag);
+        if faculties.hasKey(asset.facultyId) {
+            return faculties.get(asset.facultyId);
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
+    resource function get assets/[string tag]/department() returns Department|http:NotFound {
+        if !assets.hasKey(tag) {
+            return http:NOT_FOUND;
+        }
+        Asset asset = assets.get(tag);
+        if departments.hasKey(asset.departmentId) {
+            return departments.get(asset.departmentId);
+        } else {
+            return http:NOT_FOUND;
+        }
+    }
+
+    resource function get faculties/[string facultyId]/departments() returns Department[]|http:NotFound {
+        if !faculties.hasKey(facultyId) {
+            return http:NOT_FOUND;
+        }
+        Faculty faculty = faculties.get(facultyId);
+        Department[] result = [];
+        foreach string id in faculty.departmentIds {
+            if departments.hasKey(id) {
+                result.push(departments.get(id));
+            }
+        }
+        return result;
+    }
+
+    resource function get faculties/[string facultyId]/assets() returns Asset[]|http:NotFound {
+        if !faculties.hasKey(facultyId) {
+            return http:NOT_FOUND;
+        }
+        Asset[] result = [];
+        foreach Asset asset in assets {
+            if asset.facultyId == facultyId {
+                result.push(asset);
+            }
+        }
+        return result;
+    }
+
+    resource function get departments/[string departmentId]/assets() returns Asset[]|http:NotFound {
+        if !departments.hasKey(departmentId) {
+            return http:NOT_FOUND;
+        }
+        Asset[] result = [];
+        foreach Asset asset in assets {
+            if asset.departmentId == departmentId {
+                result.push(asset);
             }
         }
         return result;

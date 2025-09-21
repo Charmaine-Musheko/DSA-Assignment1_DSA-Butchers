@@ -98,28 +98,28 @@ curl -X POST http://localhost:9090/assets \
   -d '{
     "tag": "A003",
     "name": "Server",
-    "faculty": "IT",
-    "department": "Infrastructure",
+    "facultyId": "F001",
+    "departmentId": "D001",
     "dateAcquired": "2023-01-15",
     "currentStatus": "ACTIVE",
     "componentIds": ["COMP001"],
     "maintenanceScheduleIds": ["MS001"],
-    "workOrderIds": []
+    "workOrderIds": ["WO001"]
   }'
 ```
 
 4. **UPDATE** an existing asset 
 ```shell
-curl -X PUT http://localhost:9090/assets/A001 \
+curl -X POST http://localhost:9090/assets \
   -H "Content-Type: application/json" \
   -d '{
-    "tag": "A001",
-    "name": "Updated Laptop Pro",
-    "faculty": "Engineering",
-    "department": "Computer Engineering",
-    "dateAcquired": "2022-01-15",
+    "tag": "A003",
+    "name": "Server",
+    "facultyId": "F001",
+    "departmentId": "D001",
+    "dateAcquired": "2023-01-15",
     "currentStatus": "ACTIVE",
-    "componentIds": ["COMP001", "COMP002"],
+    "componentIds": ["COMP001"],
     "maintenanceScheduleIds": ["MS001"],
     "workOrderIds": ["WO001"]
   }'
@@ -331,5 +331,81 @@ curl -X DELETE http://localhost:9090/tasks/TASK001
 
 
 
+### RESTAPI Requests for the Faculty and Departments
 
+
+
+
+1. **GET** all Faculties and Departments
+```shell
+curl -X GET http://localhost:9090/faculties
+```
+
+```shell
+curl -X GET http://localhost:9090/departments
+```
+
+2. **GET** a specific Tasks
+```shell
+curl -X GET http://localhost:9090/tasks/TASK001
+```
+Non-existing asset (should return 404).
+
+3. **POST** a new Task '
+```shell
+curl -X POST http://localhost:9090/faculties \
+  -H "Content-Type: application/json" \
+  -d '{
+    "facultyId": "F001",
+    "name": "Engineering",
+    "description": "Faculty of Engineering and Technology",
+    "dean": "Dr. John Smith",
+    "departmentIds": ["D001", "D002"]
+  }'
+```
+
+```shell
+curl -X POST http://localhost:9090/departments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "departmentId": "D001",
+    "name": "Computer Science",
+    "description": "Department of Computer Science and Engineering",
+    "head": "Prof. Alice Johnson",
+    "facultyId": "F001"
+  }'
+```
+
+4. **UPDATE** an existing Tasks 
+```shell
+curl -X PUT http://localhost:9090/faculties/F001 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "facultyId": "F001",
+    "name": "Engineering and Technology",
+    "description": "Faculty of Engineering, Technology and Applied Sciences",
+    "dean": "Dr. Robert Brown",
+    "departmentIds": ["D001", "D002", "D003"]
+  }'
+```
+
+```shell
+curl -X PUT http://localhost:9090/departments/D001 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "departmentId": "D001",
+    "name": "Computer Science & Engineering",
+    "description": "Department of Computer Science and Software Engineering",
+    "head": "Prof. Michael Wilson",
+    "facultyId": "F001"
+  }'
+```
+
+5. **DELETE** an existing Task 
+```shell
+curl -X DELETE http://localhost:9090/faculties/F001
+```
+```shell
+curl -X DELETE http://localhost:9090/departments/D001
+```
 
