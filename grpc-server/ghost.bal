@@ -1,178 +1,152 @@
-import ballerina/grpc;
-import ballerina/time;
-
-// Define the types
-type Car record {
-    string id;
-    string make;
-    string model;
-    int year;
-    string color;
-    decimal pricePerDay;
-    boolean available;
-};
-
-type CarId record {
-    string id;
-};
-
-type Response record {
-    string message;
-};
-
-type Empty record {};
-
-type CarList record {
-    Car[] cars;
-};
-
-type SearchRequest record {
-    string make;
-    string model;
-    int year;
-    string color;
-    decimal maxPrice;
-};
-
-type CartRequest record {
+public type CartEntry record {| 
     string carId;
     string userId;
-};
+|};
 
-type ReservationRequest record {
-    string carId;
-    string userId;
-    time:Utc startDate;
-    time:Utc endDate;
-};
-
-type ReservationResponse record {
+public type Reservation record {| 
     string reservationId;
-    decimal totalPrice;
-    string message;
-};
+    string userId;
+    string[] carIds;
+    float totalPrice;
+|};
 
-// In-memory tables to store data
-table<Car> key(id) cars = table [];
-table<CartRequest> key(carId, userId) cartItems = table [];
-table<ReservationRequest> key(reservationId) reservations = table [];
-
-// Counter for generating reservation IDs
+final map<Car> cars = {};
+final map<CartEntry[]> cartsByUser = {};
+final map<Reservation> reservations = {};
 int reservationIdCounter = 1;
 
-// Main gRPC service
-service "/CarRental" on new grpc:Listener(9090) {
-
-    // Add a new car to the table
-    remote function AddCar(Car car) returns Response|error {
-        if cars.hasKey(car.id) {
-            return {message: "Car with ID " + car.id + " already exists"};
-        }
-        
-        cars.add(car);
-        return {message: "Car added successfully"};
+public function addCarToInventory(Car car) returns Response {
+    if car.id == "" {
+        return {message: "Car id is required"};
     }
 
-    // Update an existing car entry
-    remote function UpdateCar(Car car) returns Response|error {
-        if !cars.hasKey(car.id) {
-            return {message: "Car with ID " + car.id + " not found"};
-        }
-        
-        _ = cars.remove(car.id);
-        cars.add(car);
-        return {message: "Car updated successfully"};
+    if cars.hasKey(car.id) {
+        return {message: "Car with ID " + car.id + " already exists"};
     }
 
-    // Remove a car from the table
-    remote function RemoveCar(CarId id) returns Response|error {
-        if !cars.hasKey(id.id) {
-            return {message: "Car with ID " + id.id + " not found"};
-        }
-        
-        _ = cars.remove(id.id);
-        return {message: "Car removed successfully"};
+    cars[car.id] = car;
+    return {message: "Car added successfully"};
+}
+
+public function updateCarInInventory(Car car) returns Response {
+    if !cars.hasKey(car.id) {
+        return {message: "Car with ID " + car.id + " not found"};
     }
 
-    // List all currently available cars
-    remote function ListAvailableCars(Empty req) returns CarList|error {
-        Car[] availableCars = from var car in cars
-            where car.available
-            select car;
-        
-        return {cars: availableCars};
+    cars[car.id] = car;
+    return {message: "Car updated successfully"};
+}
+
+public function removeCarFromInventory(CarId id) returns Response {
+    if !cars.hasKey(id.id) {
+        return {message: "Car with ID " + id.id + " not found"};
     }
 
-    // Search for cars matching the query
-    remote function SearchCar(SearchRequest req) returns CarList|error {
-        Car[] matchingCars = from var car in cars
-            where car.available && 
-                (req.make == "" || car.make == req.make) &&
-                (req.model == "" || car.model == req.model) &&
-                (req.year == 0 || car.year == req.year) &&
-                (req.color == "" || car.color == req.color) &&
-                (req.maxPrice == 0 || car.pricePerDay <= req.maxPrice)
-            select car;
-        
-        return {cars: matchingCars};
+    _ = cars.remove(id.id);
+    foreach var [userId, cartValue] in cartsByUser.entries() {
+        CartEntry[] cartEntries = <CartEntry[]>cartValue;
+        CartEntry[] filtered = [];
+        foreach var entry in cartEntries {
+            if entry.carId != id.id {
+                filtered.push(entry);
+            }
+        }
+        cartsByUser[userId] = filtered;
     }
 
-    // Add a selected car to a user's cart
-    remote function AddToCart(CartRequest req) returns Response|error {
-        if !cars.hasKey(req.carId) {
-            return {message: "Car with ID " + req.carId + " not found"};
+    return {message: "Car removed successfully"};
+}
+
+public function listAvailableCarsFromInventory() returns CarList {
+    Car[] availableCars = [];
+    foreach var [_, car] in cars.entries() {
+        if car.available {
+            availableCars.push(car);
         }
-        
-        // Check if car is already in user's cart
-        if cartItems.hasKey(req.carId, req.userId) {
-            return {message: "Car is already in your cart"};
-        }
-        
-        cartItems.add(req);
-        return {message: "Car added to cart successfully"};
+    }
+    return {cars: availableCars};
+}
+
+public function searchCarsInInventory(string query) returns CarList {
+    string lowered = query.toLowerAscii();
+    if lowered == "" {
+        return listAvailableCarsFromInventory();
     }
 
-    // Place a reservation and calculate pricing
-    remote function PlaceReservation(ReservationRequest req) returns ReservationResponse|error {
-        // Check if car exists
-        if !cars.hasKey(req.carId) {
-            return {reservationId: "", totalPrice: 0, message: "Car not found"};
-        }
-        
-        // Check if car is available
-        Car car = cars.get(req.carId);
+    Car[] matches = [];
+    foreach var [_, car] in cars.entries() {
         if !car.available {
-            return {reservationId: "", totalPrice: 0, message: "Car is not available"};
+            continue;
         }
-        
-        // Calculate number of days
-        time:Utc start = req.startDate;
-        time:Utc end = req.endDate;
-        decimal days = <decimal>(time:utcDiffSeconds(end, start) / (24 * 60 * 60));
-        
-        if days <= 0 {
-            return {reservationId: "", totalPrice: 0, message: "Invalid date range"};
+        string make = car.make.toLowerAscii();
+        string model = car.model.toLowerAscii();
+        string idValue = car.id.toLowerAscii();
+        if make == lowered || model == lowered || idValue == lowered {
+            matches.push(car);
         }
-        
-        // Calculate total price
-        decimal totalPrice = car.pricePerDay * days;
-        
-        // Generate reservation ID
-        string reservationId = "RES" + reservationIdCounter.toString();
-        reservationIdCounter += 1;
-        
-        // Mark car as unavailable
-        car.available = false;
-        _ = cars.remove(req.carId);
-        cars.add(car);
-        
-        // Add to reservations table
-        reservations.add(req);
-        
-        return {
-            reservationId: reservationId,
-            totalPrice: totalPrice,
-            message: "Reservation placed successfully"
-        };
     }
+    return {cars: matches};
+}
+
+public function addItemToCart(CartRequest req) returns Response {
+    if !cars.hasKey(req.carId) {
+        return {message: "Car with ID " + req.carId + " not found"};
+    }
+
+    Car car = <Car>cars[req.carId];
+    if !car.available {
+        return {message: "Car with ID " + req.carId + " is not available"};
+    }
+
+    CartEntry[] userCart = [];
+    if cartsByUser.hasKey(req.userId) {
+        userCart = <CartEntry[]>cartsByUser[req.userId];
+    }
+
+    foreach var entry in userCart {
+        if entry.carId == req.carId {
+            return {message: "Car already in cart"};
+        }
+    }
+
+    userCart.push({carId: req.carId, userId: req.userId});
+    cartsByUser[req.userId] = userCart;
+    return {message: "Car added to cart"};
+}
+
+public function reserveCars(ReservationRequest req) returns ReservationResponse {
+    if req.carIds.length() == 0 {
+        return {status: "FAILED", totalPrice: 0.0};
+    }
+
+    Car[] carsToReserve = [];
+    float totalPrice = 0.0;
+    foreach var carId in req.carIds {
+        if !cars.hasKey(carId) {
+            return {status: "FAILED", totalPrice: 0.0};
+        }
+        Car car = <Car>cars[carId];
+        if !car.available {
+            return {status: "FAILED", totalPrice: 0.0};
+        }
+        totalPrice += car.price;
+        carsToReserve.push(car);
+    }
+
+    foreach var reservedCar in carsToReserve {
+        reservedCar.available = false;
+        cars[reservedCar.id] = reservedCar;
+    }
+
+    string reservationId = "RES-" + reservationIdCounter.toString();
+    reservationIdCounter += 1;
+    reservations[reservationId] = {
+        reservationId: reservationId,
+        userId: req.userId,
+        carIds: req.carIds.clone(),
+        totalPrice: totalPrice
+    };
+
+    _ = cartsByUser.remove(req.userId);
+    return {status: reservationId, totalPrice: totalPrice};
 }

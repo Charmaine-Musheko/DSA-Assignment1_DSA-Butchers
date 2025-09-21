@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+// Patema: Protocol buffer definition for the car rental service
+
+service CarRental {
+	rpc AddCar (Car) returns (Response);
+	rpc UpdateCar (Car) returns (Response);
+	rpc RemoveCar (CarId) returns (Response);
+	rpc ListAvailableCars (Empty) returns (CarList);
+	rpc SearchCar (SearchRequest) returns (CarList);
+	rpc AddToCart (CartRequest) returns (Response);
+	rpc PlaceReservation (ReservationRequest) returns (ReservationResponse);
+}
+
+message Car {
+	string id = 1;
+	string make = 2;
+	string model = 3;
+	double price = 4;
+	bool available = 5;
+}
+message CarId { string id = 1; }
+message Empty {}
+message CarList { repeated Car cars = 1; }
+message SearchRequest { string query = 1; }
+message CartRequest { string carId = 1; string userId = 2; }
+message ReservationRequest { string userId = 1; repeated string carIds = 2; }
+message ReservationResponse { string status = 1; double totalPrice = 2; }
+message Response { string message = 1; }

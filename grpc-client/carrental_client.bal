@@ -3,11 +3,11 @@ import ballerina/io;
 CarRentalClient ep = check new ("http://localhost:9000");
 
 public function main() returns error? {
-    Car addCarRequest = {id: "ballerina", make: "ballerina", model: "ballerina", price: 1, available: true};
+    Car addCarRequest = {id: "ballerina", make: "ballerina", model: "ballerina", price: 50, available: true};
     Response addCarResponse = check ep->AddCar(addCarRequest);
     io:println(addCarResponse);
 
-    Car updateCarRequest = {id: "ballerina", make: "ballerina", model: "ballerina", price: 1, available: true};
+    Car updateCarRequest = {id: "ballerina", make: "ballerina", model: "ballerina", price: 50, available: true};
     Response updateCarResponse = check ep->UpdateCar(updateCarRequest);
     io:println(updateCarResponse);
 
