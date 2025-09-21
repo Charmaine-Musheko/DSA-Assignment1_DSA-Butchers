@@ -3,33 +3,74 @@ import ballerina/uuid;
 
 CarRentalClient ep = check new ("http://localhost:9000");
 
-public function main(string... args) returns error? {
-    string carId = args.length() > 0 ? args[0] : "car-" + uuid:createType1AsString();
-    string carMake = args.length() > 1 ? args[1] : "Nissan";
-    string carModel = args.length() > 2 ? args[2] : "Leaf";
-    string userId = args.length() > 3 ? args[3] : "user-" + uuid:createType4AsString();
-    string searchQuery = args.length() > 4 ? args[4] : carMake;
+public function main() returns error? {
+    string stamp = uuid:createType4AsString();
 
-    Car addCarRequest = {id: carId, make: carMake, model: carModel, price: 4500, available: true};
+    string addCarId = "cli-add-" + stamp;
+    Car addCarRequest = {
+        id: addCarId,
+        make: "Storm",
+        model: "Coupe",
+        price: 45.0,
+        available: true
+    };
     Response addCarResponse = check ep->AddCar(addCarRequest);
-    io:println("AddCar => " + addCarResponse.message);
+    io:println(string `AddCar(${addCarId}) -> ${addCarResponse.message}`);
 
-    Car updateCarRequest = {id: carId, make: carMake, model: carModel + " Premium", price: 4800, available: true};
+    string updateCarId = "cli-update-" + stamp;
+    Car createUpdateCar = {
+        id: updateCarId,
+        make: "Nimbus",
+        model: "Hatch",
+        price: 55.0,
+        available: true
+    };
+    _ = check ep->AddCar(createUpdateCar);
+    Car updateCarRequest = {
+        id: updateCarId,
+        make: "Nimbus",
+        model: "Hatchback",
+        price: 60.0,
+        available: true
+    };
     Response updateCarResponse = check ep->UpdateCar(updateCarRequest);
-    io:println("UpdateCar => " + updateCarResponse.message);
+    io:println(string `UpdateCar(${updateCarId}) -> ${updateCarResponse.message}`);
+
+    string removeCarId = "cli-remove-" + stamp;
+    Car createRemoveCar = {
+        id: removeCarId,
+        make: "Bolt",
+        model: "Sedan",
+        price: 40.0,
+        available: true
+    };
+    _ = check ep->AddCar(createRemoveCar);
+    Response removeCarResponse = check ep->RemoveCar({id: removeCarId});
+    io:println(string `RemoveCar(${removeCarId}) -> ${removeCarResponse.message}`);
 
     CarList listAvailableCarsResponse = check ep->ListAvailableCars({});
-    io:println("ListAvailableCars => " + listAvailableCarsResponse.cars.toString());
+    io:println(string `ListAvailableCars -> ${listAvailableCarsResponse.cars.length()} cars available`);
 
-    SearchRequest searchCarRequest = {query: searchQuery};
-    CarList searchCarResponse = check ep->SearchCar(searchCarRequest);
-    io:println("SearchCar => " + searchCarResponse.cars.toString());
+    string searchCarId = updateCarId;
+    CarList searchCarResponse = check ep->SearchCar({query: searchCarId});
+    io:println(string `SearchCar(${searchCarId}) -> ${searchCarResponse.cars.length()} matches`);
 
-    CartRequest addToCartRequest = {carId: carId, userId: userId};
-    Response addToCartResponse = check ep->AddToCart(addToCartRequest);
-    io:println("AddToCart => " + addToCartResponse.message);
+    string userId = "cli-user-" + stamp;
+    string cartCarId = "cli-cart-" + stamp;
+    Car cartCar = {
+        id: cartCarId,
+        make: "Pulse",
+        model: "SUV",
+        price: 75.0,
+        available: true
+    };
+    _ = check ep->AddCar(cartCar);
+    Response addToCartResponse = check ep->AddToCart({carId: cartCarId, userId: userId});
+    io:println(string `AddToCart(${cartCarId}) -> ${addToCartResponse.message}`);
 
-    ReservationRequest placeReservationRequest = {userId: userId, carIds: [carId]};
-    ReservationResponse placeReservationResponse = check ep->PlaceReservation(placeReservationRequest);
-    io:println("PlaceReservation => status:" + placeReservationResponse.status + ", totalPrice:" + placeReservationResponse.totalPrice.toString());
+    ReservationResponse placeReservationResponse = check ep->PlaceReservation({
+        userId: userId,
+        carIds: [cartCarId]
+    });
+    io:println(string `PlaceReservation(${cartCarId}) -> status: ${placeReservationResponse.status}, total: ${placeReservationResponse.totalPrice}`);
 }

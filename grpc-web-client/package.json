@@ -1,0 +1,17 @@
+{
+  "name": "grpc-web-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser client for the CarRental gRPC service using gRPC-Web",
+  "scripts": {
+    "prebuild": "node ./scripts/check-preqs.js",
+    "build": "esbuild main.js --bundle --outfile=dist/bundle.js --loader:.js=js",
+    "serve": "npx http-server ."
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0",
+    "grpc-web": "^1.5.0",
+    "google-protobuf": "^3.21.2",
+    "http-server": "^14.1.1"
+  }
+}
