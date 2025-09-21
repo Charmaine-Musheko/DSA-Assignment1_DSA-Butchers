@@ -6,7 +6,8 @@
   "scripts": {
     "prebuild": "node ./scripts/check-preqs.js",
     "build": "esbuild main.js --bundle --outfile=dist/bundle.js --loader:.js=js",
-    "serve": "npx http-server ."
+    "serve": "npx http-server .",
+    "generate:stubs": "protoc -I .. patema.proto --js_out=import_style=commonjs:./gen --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./gen"
   },
   "devDependencies": {
     "esbuild": "^0.23.0",
