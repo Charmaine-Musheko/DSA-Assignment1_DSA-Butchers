@@ -5,9 +5,15 @@
 
 # Requests to access assets
 
-1. **GET** all assets `curl -X GET http://localhost:9090/assets`
-
-2. **GET** specific assets by tag `curl -X GET http://localhost:9090/assets/A001`  Non-existing asset (should return 404).
+1. **GET** all assets 
+```shell
+curl -X GET http://localhost:9090/assets`
+```
+2. **GET** specific assets by tag 
+```shell
+curl -X GET http://localhost:9090/assets/A001
+```
+Non-existing asset (should return 404).
 
 3. **POST** a new asset '
 ```shell
